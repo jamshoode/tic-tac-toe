@@ -57,7 +57,6 @@ fn game() {
         status: true,
         turn: p1_name.clone(),
     };
-    let mut p_move: String = String::new();
     let mut coords = [
         ["1".to_string(), "2".to_string(), "3".to_string()],
         ["4".to_string(), "5".to_string(), "6".to_string()],
@@ -67,6 +66,7 @@ fn game() {
 
     while game.status() != false {
         if game.turn.clone() == p1_name.clone() {
+            let mut p_move: String = String::new();
 
             println!("Choose coordinates: ");
             for i in 0..3 {
@@ -97,6 +97,8 @@ fn game() {
         }
 
         if game.turn.clone() == p2_name.clone() {
+            let mut p_move: String = String::new();
+
             println!("Choose coordinates: ");
             for i in 0..3 {
                 for j in 0..3 {
@@ -125,7 +127,20 @@ fn game() {
             game.turn = p1_name.clone();
         }
 
-        game.status = false;
+        for x in 0..3 {
+            for y in 0..3 {
+                let mut count = 0;
+                if x == y {
+                    if coords[x][y] == "X".to_string() || coords[x][y] == "O".to_string() {
+                        count = count + 1;
+                    }
+                } else if (x + y) == (3 - 1) {
+                    if coords[x][y] == "X".to_string() || coords[x][y] == "O".to_string() {
+                        count = count + 1;
+                    }
+                }
+            }
+        }
     }
 }
 
