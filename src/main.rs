@@ -1,147 +1,162 @@
-#![allow(dead_code, unused_variables, unused_mut)]
+#![allow(dead_code, unused_variables)]
 use std::io;
 
 struct Player {
     name: String,
     char: String,
+    is_won: bool,
 }
 
 struct Game {
-    status: bool,
-    turn: String,
+    board: Vec<String>,
+    player1: Player,
+    player2: Player,
+    turn: Player,
+    status: String,
 }
 
-impl Game {
-    pub fn status(&self) -> bool {
-        self.status
+impl Clone for Player {
+    fn clone(&self) -> Player {
+        Player {
+            name: self.name.clone(),
+            char: self.char.clone(),
+            is_won: self.is_won.clone(),
+        }
+    }
+}
+impl Player {
+    fn new(name: String, char: String) -> Player {
+        Player {
+            name,
+            char,
+            is_won: false,
+        }
     }
 }
 
-fn init_players() -> (Player, Player){
-    let mut p1_name: String = String::new();
-    let mut p2_name: String = String::new();
-    let mut p1_char: String = String::new();
-    let mut p2_char: String = String::new();
+impl Game {
+    fn new(player1: Player, player2: Player) -> Game {
+        Game {
+            board: vec![
+                "1".to_string(), "2".to_string(), "3".to_string(),
+                "4".to_string(), "5".to_string(), "6".to_string(),
+                "7".to_string(), "8".to_string(), "9".to_string()
+            ],
+            player1: player1.clone(),
+            player2: player2,
+            turn: player1.clone(),
+            status: "Playing".to_string(),
+        }
+    }
 
-    println!("Enter 1-st player name: ");
-    io::stdin().read_line(&mut p1_name).expect("Failed to parse.");
+    fn draw_board(&self) {
+        let mut count = 0;
 
-    println!("Enter 2-nd player name: ");
-    io::stdin().read_line(&mut p2_name).expect("Failed to parse.");
+        for i in &self.board {
+            if count % 3 == 0 {
+                println!();
+            }
+            print!("{} ", i);
+            count += 1;
+        }
 
-    println!("Choose character (X or O) for 1-st player: ");
-    io::stdin().read_line(&mut p1_char).expect("Failed to parse.");
+        println!();
+    }
 
-    println!("Choose character (X or O) for 2-nd player: ");
-    io::stdin().read_line(&mut p2_char).expect("Failed to parse.");
+    fn check_win(&mut self) {
+        let mut count = 0;
+        let mut is_won = false;
 
+        for i in 0..3 {
+            if self.board[count] == self.board[count + 1] && self.board[count] == self.board[count + 2] {
+                is_won = true;
+            }
+            count += 3;
+        }
+        
+        count = 0;
+        for i in 0..3 {
+            if self.board[count] == self.board[count + 3] && self.board[count] == self.board[count + 6] {
+                is_won = true;
+            }
+            count += 1;
+        }
+        
+        if self.board[0] == self.board[4] && self.board[0] == self.board[8] {
+            is_won = true;
+        }
+        if self.board[2] == self.board[4] && self.board[2] == self.board[6] {
+            is_won = true;
+        }
 
-    let p1 = Player {
-        name: p1_name,
-        char: p1_char,
-    };
+        if is_won {
+            self.status = "Won".to_string();
+            self.turn.is_won = true;
+            println!("{} has won!", self.turn.name.trim());
+            self.draw_board();
+        }
+    }
 
-    let p2 = Player {
-        name: p2_name,
-        char: p2_char,
-    };
+    fn turn(&mut self) {
+        while self.status == "Playing" {
+            let mut input = String::new();
 
-    (p1, p2)
+            print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
+
+            self.draw_board();
+
+            println!("{}'s turn", self.turn.name.trim());
+            println!("Enter a number to place your character: ");
+
+            io::stdin().read_line(&mut input).expect("Failed to read line");
+
+            let input: usize = input.trim().parse().expect("Please type a number!");
+
+            if input > 9 || input < 1 {
+                println!("Please enter a number between 1 and 9");
+                continue;
+            }
+
+            if self.board[input - 1] == "X" || self.board[input - 1] == "O" {
+                println!("That spot is already taken!");
+                continue;
+            }
+
+            self.board[input - 1] = self.turn.char.clone();
+
+            self.check_win();
+
+            if self.turn.name == self.player1.name {
+                self.turn = self.player2.clone();
+            } else {
+                self.turn = self.player1.clone();
+            }
+
+        }
+    }
+}
+
+fn init_players() -> (Player, Player) {
+    let mut player1 = String::new();
+    let mut player2 = String::new();
+
+    println!("Enter player 1 name: ");
+    io::stdin().read_line(&mut player1).expect("Failed to read line");
+
+    println!("Enter player 2 name: ");
+    io::stdin().read_line(&mut player2).expect("Failed to read line");
+
+    let player1 = Player::new(player1, "X".to_string());
+    let player2 = Player::new(player2, "O".to_string());
+
+    (player1, player2)
 }
 
 fn game() {
     let (p1, p2): (Player, Player) = init_players();
-    let p1_name = p1.name;
-    let p2_name = p2.name;
-    let mut game = Game {
-        status: true,
-        turn: p1_name.clone(),
-    };
-    let mut coords = [
-        ["1".to_string(), "2".to_string(), "3".to_string()],
-        ["4".to_string(), "5".to_string(), "6".to_string()],
-        ["7".to_string(), "8".to_string(), "9".to_string()]
-    ];    
 
-
-    while game.status() != false {
-        if game.turn.clone() == p1_name.clone() {
-            let mut p_move: String = String::new();
-
-            println!("Choose coordinates: ");
-            for i in 0..3 {
-                for j in 0..3 {
-                    print!("{} ", coords[i][j])
-                }
-                println!("");
-            }
-            io::stdin().read_line(&mut p_move).expect("Failed to parse.");
-
-            for x in 0..3 {
-                for y in 0..3 {
-                    if coords[x][y] == p_move.trim() {
-                        coords[x][y] = p1.char.clone().trim().to_string();
-                    }
-                }
-            }
-
-
-            for x in 0..3 {
-                for y in 0..3 {
-                    print!("{} ", coords[x][y]);
-                }
-                println!("");
-            }
-
-            game.turn = p2_name.clone();
-        }
-
-        if game.turn.clone() == p2_name.clone() {
-            let mut p_move: String = String::new();
-
-            println!("Choose coordinates: ");
-            for i in 0..3 {
-                for j in 0..3 {
-                    print!("{} ", coords[i][j])
-                }
-                println!("");
-            }
-            io::stdin().read_line(&mut p_move).expect("Failed to parse.");
-
-            for x in 0..3 {
-                for y in 0..3 {
-                    if coords[x][y] == p_move.trim() {
-                        coords[x][y] = p2.char.clone().trim().to_string();
-                    }
-                }
-            }
-
-
-            for x in 0..3 {
-                for y in 0..3 {
-                    print!("{} ", coords[x][y]);
-                }
-                println!("");
-            }
-
-            game.turn = p1_name.clone();
-        }
-
-        for x in 0..3 {
-            for y in 0..3 {
-                let mut count = 0;
-                if x == y {
-                    if coords[x][y] == "X".to_string() || coords[x][y] == "O".to_string() {
-                        count = count + 1;
-                    }
-                } else if (x + y) == (3 - 1) {
-                    if coords[x][y] == "X".to_string() || coords[x][y] == "O".to_string() {
-                        count = count + 1;
-                    }
-                }
-            }
-        }
-    }
+    let mut game: Game = Game::new(p1, p2);
+    game.turn();
 }
 
 fn main() {
