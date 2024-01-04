@@ -42,7 +42,7 @@ impl Game {
                 "7".to_string(), "8".to_string(), "9".to_string()
             ],
             player1: player1.clone(),
-            player2: player2,
+            player2: player2.clone(),
             turn: player1.clone(),
             status: "Playing".to_string(),
         }
