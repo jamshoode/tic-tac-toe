@@ -1,4 +1,3 @@
-#![allow(dead_code, unused_variables)]
 use std::io;
 
 struct Player {
@@ -67,7 +66,7 @@ impl Game {
         let mut count = 0;
         let mut is_won = false;
 
-        for i in 0..3 {
+        for _ in 0..3 {
             if self.board[count] == self.board[count + 1] && self.board[count] == self.board[count + 2] {
                 is_won = true;
             }
@@ -75,7 +74,7 @@ impl Game {
         }
         
         count = 0;
-        for i in 0..3 {
+        for _ in 0..3 {
             if self.board[count] == self.board[count + 3] && self.board[count] == self.board[count + 6] {
                 is_won = true;
             }
